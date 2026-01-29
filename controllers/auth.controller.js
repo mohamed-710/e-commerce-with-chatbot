@@ -85,13 +85,15 @@ const login = asyncWrapper(async (req, res, next) => {
     return res.json({ success: true, results: { token } });
 });
 
-const forgetCode = asyncWrapper(async (req, res, next) => {
+const forgetCode = asyncWrapper(async (req, res, next) => {   
     const { email } = req.body;
 
     const user = await User.findOne({ email });
 
     if (!user) return next(appError.create("Email not found", 404, httpStatusText.FAIL));
 
+    if(!user.isConfirmed) return next(appError.create("please activate your email first!",400,httpStatusText.FAIL));
+   
     const forgetcode = Randomstring.generate({
         length: 5,
         charset: 'numeric'
@@ -132,6 +134,7 @@ const restPassword = asyncWrapper(async (req, res, next) => {
         { user: user._id },
         { isValid: false }
     );
+
 
 
     // const tokens=await Token.find(({user:user._id}));

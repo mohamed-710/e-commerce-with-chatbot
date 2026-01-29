@@ -14,7 +14,7 @@ const tokenSchema =mongoose.Schema({
     agent:{type:String},
     expiredAt:{type:Date},
 },
-{timestamp:true}
+{timestamps:true}
 
 );
 
