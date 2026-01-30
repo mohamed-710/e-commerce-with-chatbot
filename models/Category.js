@@ -14,7 +14,8 @@ const categorySchema=mongoose.Schema({
     },
     createdBy:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
+        ref:"User",
+        required:true
     },
     image:{
         id:{type:String},

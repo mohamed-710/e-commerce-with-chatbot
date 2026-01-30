@@ -1,5 +1,5 @@
-import appError from "../utils/appError"
-import httpStatusText from "../utils/httpStatusText"
+import appError from "../utils/appError.js"
+import httpStatusText from "../utils/httpStatusText.js"
 
 export const isAuthorized = (role) => {
     return async (req, res, next) => {

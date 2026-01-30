@@ -1,7 +1,7 @@
 import multer, { diskStorage } from 'multer';
 import appError from '../utils/appError.js';
 import httpStatusText from '../utils/httpStatusText.js';
-import fileType from "file-type";
+// import fileType from "file-type";
 import fs from 'fs/promises';
 const uploadFileCloud = () => {
 
@@ -26,18 +26,18 @@ const uploadFileCloud = () => {
     });
     return multerUpload;
 };
-const validateUploadedImage = async (filePath) => {
-    const buffer = await fs.readFile(filePath);
-    const type = await fileType.fromBuffer(buffer);
+// const validateUploadedImage = async (filePath) => {
+//     const buffer = await fs.readFile(filePath);
+//     const type = await fileType.fromBuffer(buffer);
     
-    if (!type || !type.mime.startsWith('image/')) {
-        // Delete the invalid file
-        await fs.unlink(filePath);
-        throw appError.create('Invalid file signature', 400, httpStatusText.FAIL);
-    }
+//     if (!type || !type.mime.startsWith('image/')) {
+//         // Delete the invalid file
+//         await fs.unlink(filePath);
+//         throw appError.create('Invalid file signature', 400, httpStatusText.FAIL);
+//     }
     
-    return type;
-};
+//     return type;
+// };
 
 
-export { uploadFileCloud ,validateUploadedImage};
+export { uploadFileCloud};

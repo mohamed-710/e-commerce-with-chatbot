@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/Dbconfig.js'
 import authRoutes from './routes/auth.routes.js'
+import categoryRoutes from './routes/category.routes.js';
 import cookieParser from 'cookie-parser';
 dotenv.config();
 
@@ -14,6 +15,9 @@ app.use(cookieParser());
 // Routes
 
 app.use('/api/auth',authRoutes);
+
+app.use('/api/category',categoryRoutes);
+
 
 // 404 handler
 
