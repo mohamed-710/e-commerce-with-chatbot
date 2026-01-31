@@ -18,7 +18,7 @@ const categorySchema=mongoose.Schema({
         required:true
     },
     image:{
-        id:{type:String},
+        publicId:{type:String},
         secure_url:{type:String}
     },
 },

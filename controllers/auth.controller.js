@@ -74,26 +74,27 @@ const login = asyncWrapper(async (req, res, next) => {
     await Token.create({
         token,
         user: user._id,
-        /*
-        isValid:true,
-        agent:req.headers['user-agent'],
-        expiredAt:new Date(Date.now()+7*24*60*60*1000)
-        @TODO
-        */
+        agent: req.headers['user-agent'],
+        expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-
+    /*
+     isValid:true,
+     agent:req.headers['user-agent'],
+     expiredAt:new Date(Date.now()+7*24*60*60*1000)
+     @TODO
+     */
     return res.json({ success: true, results: { token } });
 });
 
-const forgetCode = asyncWrapper(async (req, res, next) => {   
+const forgetCode = asyncWrapper(async (req, res, next) => {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
 
     if (!user) return next(appError.create("Email not found", 404, httpStatusText.FAIL));
 
-    if(!user.isConfirmed) return next(appError.create("please activate your email first!",400,httpStatusText.FAIL));
-   
+    if (!user.isConfirmed) return next(appError.create("please activate your email first!", 400, httpStatusText.FAIL));
+
     const forgetcode = Randomstring.generate({
         length: 5,
         charset: 'numeric'
