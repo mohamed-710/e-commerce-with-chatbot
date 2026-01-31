@@ -3,7 +3,7 @@ import { verifyToken } from "../middlewares/verifyToken.js";
 import { isAuthorized } from "../middlewares/allowedTo.js";
 import {validation} from '../middlewares/validation.js';
 import { uploadFileCloud } from "../middlewares/fileUpload.js";
-import { ValidateCategorySchema } from "../validators/categorySchema.js";
+import { ValidateCategorySchema ,UpdateCategorySchema} from "../validators/categorySchema.js";
 import {createCategory}  from "../controllers/category.controller.js";
 const route=express.Router();
 
@@ -18,4 +18,12 @@ route.post(
     createCategory
 );
 
+route.patch('/:id',
+    verifyToken,
+    isAuthorized("admin"),
+    uploadFileCloud().single('category'),
+    validation(UpdateCategorySchema),
+    //updateCategory
+
+)
 export default route;

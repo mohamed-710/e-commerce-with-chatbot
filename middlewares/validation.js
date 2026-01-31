@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 export const validation = (schema) => {
     return (req, res, next) => {
         const data = { ...req.body, ...req.params, ...req.query };
@@ -12,3 +14,9 @@ export const validation = (schema) => {
         next();
     }
 }
+export const isValidObjectId = (value,helper) => {
+    if(Types.ObjectId.isValid(value)) {
+        return true;
+    }   
+    return helper.message("Invalid Object Id");
+};

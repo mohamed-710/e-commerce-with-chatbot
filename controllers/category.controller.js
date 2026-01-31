@@ -34,4 +34,14 @@ const createCategory = asyncWrapper(async (req, res, next) => {
     res.status(201).json({ success: true, message: "Category created" });
 });
 
+const updateCategory = asyncWrapper(async (  req, res, next) => {
+
+    //check if category exists
+const category=await Category.findById(req.params.id);
+    //check categor owner
+    //check file >>> upload in cloudinary
+    //update fields
+    //return response
+});
+
 export { createCategory };

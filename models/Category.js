@@ -17,6 +17,11 @@ const categorySchema=mongoose.Schema({
         ref:"User",
         required:true
     },
+    updatedBy:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"User",
+    },
+
     image:{
         publicId:{type:String},
         secure_url:{type:String}
