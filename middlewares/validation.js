@@ -15,7 +15,7 @@ export const validation = (schema) => {
     }
 }
 export const isValidObjectId = (value,helper) => {
-    if(Types.ObjectId.isValid(value)) {
+    if(Types.ObjectId.valid(value)) {
         return true;
     }   
     return helper.message("Invalid Object Id");

@@ -4,7 +4,7 @@ import { isAuthorized } from "../middlewares/allowedTo.js";
 import {validation} from '../middlewares/validation.js';
 import { uploadFileCloud } from "../middlewares/fileUpload.js";
 import { ValidateCategorySchema ,UpdateCategorySchema} from "../validators/categorySchema.js";
-import {createCategory}  from "../controllers/category.controller.js";
+import {createCategory,updateCategory}  from "../controllers/category.controller.js";
 const route=express.Router();
 
 //create category 
@@ -23,7 +23,8 @@ route.patch('/:id',
     isAuthorized("admin"),
     uploadFileCloud().single('category'),
     validation(UpdateCategorySchema),
-    //updateCategory
+    updateCategory
+
 
 )
 export default route;
