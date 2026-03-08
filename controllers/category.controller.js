@@ -19,7 +19,6 @@ const createCategory = asyncWrapper(async (req, res, next) => {
         req.file.path,
         { folder: `${process.env.CLOUD_FOLDER_NAME}/category` },
     );
-    console.log("Cloudinary upload result:", { public_id, secure_url });
 
     await Category.create({
         name: name,
@@ -63,4 +62,24 @@ const updateCategory = asyncWrapper(async (req, res, next) => {
 
 });
 
-export { createCategory, updateCategory };
+const deleteCategory = asyncWrapper(async (req, res, next) => {
+    //check if category exists
+    const category = await Category.findById(req.params.id);
+    if (!category)
+        return next(appError.create("Category not found", 404, httpStatusText.FAIL));
+    //check category owner
+    if (category.createdBy.toString() !== req.user._id.toString())
+        return next(appError.create("You are not authorized to delete this category", 403, httpStatusText.FAIL));
+    //delete category
+    await category.findOneAndDelete();
+    //delete image from cloudinary
+    await cloudinary.uploader.destroy(category.image.publicId);
+    return res.json({ success: true, message: "Category deleted" });
+});
+
+const getAllCategories = asyncWrapper(async (req, res, next) => {
+    const categories=await Category.find().select("-__v");;
+    return res.json({ success: true, data: categories });
+    //@TODO: pagination , filtering , sorting
+});
+export { createCategory, updateCategory, deleteCategory,getAllCategories };

@@ -12,3 +12,7 @@ export const UpdateCategorySchema=joi.object({
     name:joi.string().min(5).max(20),
     id:joi.string().custom(isValidObjectId).required(),
 }).required();
+
+export const DeleteCategorySchema=joi.object({
+    id:joi.string().custom(isValidObjectId).required(),
+}).required();
