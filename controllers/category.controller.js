@@ -78,8 +78,15 @@ const deleteCategory = asyncWrapper(async (req, res, next) => {
 });
 
 const getAllCategories = asyncWrapper(async (req, res, next) => {
-    const categories=await Category.find().select("-__v");;
-    return res.json({ success: true, data: categories });
+    const results = await Category.find()
+        .select("name slug image")
+        .populate({
+            path: "subcategory",
+            select: "name slug image -_id",
+            options: { sort: { createdAt: -1 } }
+        });
+    const categories = await Category.find().select("-__v");;
+    return res.json({ success: true, data: results });
     //@TODO: pagination , filtering , sorting
 });
-export { createCategory, updateCategory, deleteCategory,getAllCategories };
+export { createCategory, updateCategory, deleteCategory, getAllCategories };

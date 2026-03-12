@@ -4,7 +4,6 @@ import { isAuthorized } from "../middlewares/allowedTo.js";
 import {validation} from '../middlewares/validation.js';
 import { uploadFileCloud } from "../middlewares/fileUpload.js";
 import { ValidateCategorySchema ,UpdateCategorySchema} from "../validators/categorySchema.js";
-
 import {createCategory,updateCategory,deleteCategory,getAllCategories}  from "../controllers/category.controller.js";
 import subCategoryRoutes from './subCategory.routes.js';
 const route=express.Router();

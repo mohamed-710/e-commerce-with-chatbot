@@ -4,6 +4,7 @@ import connectDB from './config/Dbconfig.js'
 import authRoutes from './routes/auth.routes.js'
 import categoryRoutes from './routes/category.routes.js';
 import subCategoryRoutes from './routes/subCategory.routes.js';
+import brandRoutes from './routes/brand.routes.js';
 import cookieParser from 'cookie-parser';
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use('/api/Auth',authRoutes);
 app.use('/api/category',categoryRoutes);
 
 app.use('/api/subCategory',subCategoryRoutes);
+app.use('/api/brand',brandRoutes)
 
 
 // 404 handler
