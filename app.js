@@ -16,12 +16,12 @@ app.use(cookieParser());
 
 // Routes
 
-app.use('/api/Auth',authRoutes);
+app.use('/api/Auth', authRoutes);
 
-app.use('/api/category',categoryRoutes);
+app.use('/api/category', categoryRoutes);
 
-app.use('/api/subCategory',subCategoryRoutes);
-app.use('/api/brand',brandRoutes)
+app.use('/api/subCategory', subCategoryRoutes);
+app.use('/api/brand', brandRoutes)
 
 
 // 404 handler
@@ -33,14 +33,14 @@ app.use('/api/brand',brandRoutes)
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  const statusCode=err.cause||500;
-  res.status(statusCode).json({ 
+  const statusCode = err.statusCode || err.cause || 500;
+  res.status(statusCode).json({
     error: 'Something went wrong!',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 });
- 
+
 // app.use((req, res) => {
 //   res.status(404).json({ error: 'Route not found' });
 // });
@@ -48,11 +48,11 @@ app.use((err, req, res, next) => {
 // Start server
 const PORT = process.env.PORT || 3000;
 
-  app.listen(PORT, async() => {
-    await connectDB();
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  });
+app.listen(PORT, async () => {
+  await connectDB();
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});
 
 
 

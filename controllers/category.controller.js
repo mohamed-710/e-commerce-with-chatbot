@@ -85,7 +85,6 @@ const getAllCategories = asyncWrapper(async (req, res, next) => {
             select: "name slug image -_id",
             options: { sort: { createdAt: -1 } }
         });
-    const categories = await Category.find().select("-__v");;
     return res.json({ success: true, data: results });
     //@TODO: pagination , filtering , sorting
 });

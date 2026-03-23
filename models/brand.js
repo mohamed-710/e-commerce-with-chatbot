@@ -24,5 +24,16 @@ const brandSchema = new mongoose.Schema({
 },
     { timestamps: true }
 );
+brandSchema.virtual("catigories",{
+    ref:"Category",
+    localField:"_id",
+    foreignField:"brands"
+});
+brandSchema.virtual("subcategories",{
+    ref:"Subcategory",
+    localField:"_id",
+    foreignField:"brands"
+});
+
 const Brand = mongoose.model("Brand", brandSchema);
 export default Brand;

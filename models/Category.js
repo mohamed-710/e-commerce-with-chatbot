@@ -20,7 +20,7 @@ const categorySchema=mongoose.Schema({
     brands:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Brand",
-    }],
+    }],   
     updatedBy:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",

@@ -40,7 +40,7 @@ const deleteSubCategory = asyncWrapper(async (req, res, next) => {
     const category = await Category.findById(req.params.category);
     if (!category) return next(appError.create("Category not found", 404, httpStatusText.ERROR))
 
-    // check subcategory exist or not
+    // check subcategory exist or not certain category 
     const subcategory = await Subcategory.findOne({
         _id: req.params.id,
         category: req.params.category
