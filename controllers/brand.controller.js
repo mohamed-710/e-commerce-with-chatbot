@@ -9,13 +9,19 @@ import Subcategory from "../models/SubCategory.js";
 import mongoose from "mongoose";
 export const createBrand = asyncWrapper(async (req, res, next) => {
     //check category exist or not
-    const { categories, name } = req.body;
+    const { categories, subcategories, name } = req.body;
 
     const categoryexist = await Category.find({
         _id: { $in: categories }
     });
     if (categoryexist.length !== categories.length)
         return next(appError.create("some category not exist", 400, httpStatusText.FAIL));
+
+    if (subcategories && subcategories.length > 0) {
+        const subcategoryexist = await Subcategory.find({ _id: { $in: subcategories } });
+        if (subcategoryexist.length !== subcategories.length)
+            return next(appError.create("some subcategory not exist", 400, httpStatusText.FAIL));
+    }
     const nameExist = await Brand.findOne({ name: name });
     if (nameExist)
         return next(appError.create("brand name already exist", 400, httpStatusText.FAIL));
@@ -38,6 +44,12 @@ export const createBrand = asyncWrapper(async (req, res, next) => {
         { _id: { $in: categories } },
         { $push: { brands: brand._id } }
     );
+    if (subcategories && subcategories.length > 0) {
+        await Subcategory.updateMany(
+            { _id: { $in: subcategories } },
+            { $addToSet: { brands: brand._id } }
+        );
+    }
     res.status(200).json({ status: "success", data: brand });
 });
 
@@ -97,16 +109,16 @@ export const getBrand = asyncWrapper(async (req, res, next) => {
                 { slug: category }
             ]
         });
-        if (!categoryDoc) return res.json({ success: true, results: [], totalCount: 0 });
-        const totalCount = await Brand.countDocuments({ _id: { $in: categoryDoc.brands } });
+        if (!categoryDoc) return res.json({ success: true, results: [], totalDoc: 0 });
+        const totalDoc = await Brand.countDocuments({ _id: { $in: categoryDoc.brands } });
         const results = await Brand.find({ _id: { $in: categoryDoc.brands } })
             .populate("categories")
             .skip(skip)
             .limit(Number(limit));
         return res.json({
             success: true,
-            totalCount,
-            totalPages: Math.ceil(totalCount / limit),
+            totalDoc,
+            totalPages: Math.ceil(totalDoc / limit),
             currentPage: Number(page),
             results
         });
@@ -120,8 +132,8 @@ export const getBrand = asyncWrapper(async (req, res, next) => {
             ]
         });
 
-        if (!subcategoryDoc) return res.json({ success: true, results: [], totalCount: 0 });
-        const totalCount = await Brand.countDocuments({ _id: { $in: subcategoryDoc.brands } });
+        if (!subcategoryDoc) return res.json({ success: true, results: [], totalDoc: 0 });
+        const totalDoc = await Brand.countDocuments({ _id: { $in: subcategoryDoc.brands } });
         const results = await Brand.find({ _id: { $in: subcategoryDoc.brands } })
             .populate("categories")     // virtual
             .populate("subcategories")  // virtual join 
@@ -129,25 +141,26 @@ export const getBrand = asyncWrapper(async (req, res, next) => {
             .limit(Number(limit));
         return res.json({
             success: true,
-            totalCount,
-            totalPages: Math.ceil(totalCount / limit),
+            totalDoc,
+            totalPages: Math.ceil(totalDoc / limit),
             currentPage: Number(page),
             results
         });
     }
 
     // @TODO pagination
-    const totalCount = await Brand.countDocuments();
+    const totalDoc = await Brand.countDocuments();
     const results = await Brand.find()
         .populate("categories")     // virtual
         .populate("subcategories")  // virtual
         .skip(skip)
         .limit(Number(limit));
+    console.log(results);
 
     return res.json({
         success: true,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
+        totalDoc,
+        totalPages: Math.ceil(totalDoc / limit),
         currentPage: Number(page),
         results
     });

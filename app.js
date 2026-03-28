@@ -1,11 +1,15 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/Dbconfig.js'
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger.js";
+
 import authRoutes from './routes/auth.routes.js'
 import categoryRoutes from './routes/category.routes.js';
 import subCategoryRoutes from './routes/subCategory.routes.js';
 import brandRoutes from './routes/brand.routes.js';
 import cookieParser from 'cookie-parser';
+import couponRoutes from './routes/coupon.routes.js'
 dotenv.config();
 
 const app = express();
@@ -14,6 +18,7 @@ app.use(express.json());
 
 app.use(cookieParser());
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Routes
 
 app.use('/api/Auth', authRoutes);
@@ -21,7 +26,10 @@ app.use('/api/Auth', authRoutes);
 app.use('/api/category', categoryRoutes);
 
 app.use('/api/subCategory', subCategoryRoutes);
-app.use('/api/brand', brandRoutes)
+
+app.use('/api/brand', brandRoutes);
+
+app.use('/api/coupon',couponRoutes);
 
 
 // 404 handler

@@ -71,7 +71,7 @@ const deleteCategory = asyncWrapper(async (req, res, next) => {
     if (category.createdBy.toString() !== req.user._id.toString())
         return next(appError.create("You are not authorized to delete this category", 403, httpStatusText.FAIL));
     //delete category
-    await category.findOneAndDelete();
+    await category.deleteOne();
     //delete image from cloudinary
     await cloudinary.uploader.destroy(category.image.publicId);
     return res.json({ success: true, message: "Category deleted" });

@@ -22,9 +22,9 @@ const brandSchema = new mongoose.Schema({
         required:true
     }
 },
-    { timestamps: true }
+    { timestamps: true,toJSON:{virtuals:true},toObject:{virtuals:true}}
 );
-brandSchema.virtual("catigories",{
+brandSchema.virtual("categories",{
     ref:"Category",
     localField:"_id",
     foreignField:"brands"
