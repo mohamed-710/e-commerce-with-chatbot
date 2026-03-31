@@ -10,6 +10,7 @@ import subCategoryRoutes from './routes/subCategory.routes.js';
 import brandRoutes from './routes/brand.routes.js';
 import cookieParser from 'cookie-parser';
 import couponRoutes from './routes/coupon.routes.js'
+import productRoutes from './routes/product.routes.js'
 dotenv.config();
 
 const app = express();
@@ -31,7 +32,9 @@ app.use('/api/brand', brandRoutes);
 
 app.use('/api/coupon',couponRoutes);
 
+app.use('/api/product',productRoutes);
 
+//@TODO MAKE middeleware for convert image to webap
 // 404 handler
 
 // app.all('*',(req,res,next)=>{
