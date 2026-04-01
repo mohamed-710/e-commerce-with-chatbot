@@ -3,8 +3,8 @@ import { verifyToken } from "../middlewares/verifyToken.js";
 import { isAuthorized } from "../middlewares/allowedTo.js";
 import { validation } from "../middlewares/validation.js";
 import { uploadFileCloud } from "../middlewares/fileUpload.js";
-import { createProduct } from "../controllers/product.controller.js";
-import { createProductSchema } from "../validators/productSchema.js";
+import { createProduct, updateProduct } from "../controllers/product.controller.js";
+import { createProductSchema, updateProductSchema } from "../validators/productSchema.js";
 
 const router = express.Router();
 
@@ -93,6 +93,81 @@ router.post(
     ]),
     validation(createProductSchema),
     createProduct,
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUT /product/update-product/:id
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * @swagger
+ * /product/update-product/{id}:
+ *   put:
+ *     summary: Update an existing product
+ *     description: Admin can update any product. Seller can only update their own. All fields are optional. Sending a new thumbnail/images replaces the old ones on Cloudinary.
+ *     tags: [Product]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               discount:
+ *                 type: number
+ *               stock:
+ *                 type: integer
+ *               category:
+ *                 type: string
+ *               subcategory:
+ *                 type: string
+ *               brand:
+ *                 type: string
+ *               thumbnail:
+ *                 type: string
+ *                 format: binary
+ *                 description: New thumbnail (replaces existing)
+ *               images:
+ *                 type: string
+ *                 format: binary
+ *                 description: New extra images (replaces existing)
+ *     responses:
+ *       200:
+ *         description: Product updated successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+router.patch(
+    "/update-product/:id",
+    verifyToken,
+    isAuthorized("admin", "seller"),
+    uploadFileCloud().fields([
+        { name: "thumbnail", maxCount: 1 },
+        { name: "images",    maxCount: 3 },
+    ]),
+    validation(updateProductSchema),
+    updateProduct,
 );
 
 export default router;

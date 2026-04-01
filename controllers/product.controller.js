@@ -34,7 +34,7 @@ export const createProduct = asyncWrapper(async (req, res, next) => {
     const nameExists = await Product.findOne({ name });
     if (nameExists)
         return next(appError.create("A product with this name already exists", 409, httpStatusText.FAIL));
-    if(!req.files)
+    if (!req.files)
         return next(appError.create("Product images are required", 400, httpStatusText.FAIL));
     // 5. Thumbnail is required
     if (!req.files?.thumbnail?.[0])
@@ -86,5 +86,64 @@ export const createProduct = asyncWrapper(async (req, res, next) => {
     return res.status(201).json({
         success: true,
         message: "Product created successfully",
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUT /product/update-product/:id
+// ─────────────────────────────────────────────────────────────────────────────
+export const updateProduct = asyncWrapper(async (req, res, next) => {
+    const { id } = req.params;
+
+    // 1. Check product exists
+    const product = await Product.findById(id);
+    if (!product)
+        return next(appError.create("Product not found", 404, httpStatusText.FAIL));
+
+    // 2. Check ownership – seller can only update their own product
+    if (
+        req.user.role === "seller" &&
+        product.createdBy != req.user.id
+    ) {
+        return next(appError.create("You are not allowed to update this product", 403, httpStatusText.FAIL));
+    }
+
+    // 3. Handle thumbnail replacement
+    if (req.files?.thumbnail?.[0]) {
+        const { secure_url } = await cloudinary.uploader.upload(
+            req.files.thumbnail[0].path,
+            { public_id: product.thumbnail.publicId }
+        );
+        product.thumbnail.secure_url = secure_url;
+    }
+
+    // 4. Handle extra images replacement
+    if (req.files?.images?.length) {
+        const uploadPromises = req.files.images.map((file, index) => {
+            const publicId = product.images[index]?.publicId;
+            return cloudinary.uploader.upload(file.path, { public_id: publicId });
+        });
+        const uploaded = await Promise.all(uploadPromises);
+        product.images = uploaded.map((img) => ({
+            publicId: img.public_id,
+            secure_url: img.secure_url,
+        }));
+    }
+
+    // 5. Update scalar fields
+    product.name = req.body.name ? req.body.name : product.name;
+    product.description = req.body.description ? req.body.description : product.description;
+    product.price = req.body.price !== undefined ? req.body.price : product.price;
+    product.discount = req.body.discount !== undefined ? req.body.discount : product.discount;
+    product.stock = req.body.stock !== undefined ? req.body.stock : product.stock;
+    if (req.body.name) {
+        product.slug = slugify(req.body.name);
+    }
+    await product.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Product updated successfully",
+        data: { product },
     });
 });
