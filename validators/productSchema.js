@@ -45,11 +45,10 @@ export const createProductSchema = joi.object({
 }).required();
 
 export const updateProductSchema = joi.object({
-    // ── from req.params ──────────────────────────────────────────────────────
     id: joi.string().custom(isValidObjectId).required()
         .messages({ "any.required": "Product id is required" }),
 
-    // ── from req.body (all optional for partial update) ───────────────────────
+
     name: joi.string().min(3).max(100).trim()
         .messages({
             "string.min": "Product name must be at least 3 characters",
@@ -73,4 +72,9 @@ export const updateProductSchema = joi.object({
 
     stock: joi.number().integer().min(1)
         .messages({ "number.min": "Stock must be at least 1" }),
+}).required();
+
+export const deleteProductSchema = joi.object({
+    id: joi.string().custom(isValidObjectId).required()
+        .messages({ "any.required": "Product id is required" }),
 }).required();

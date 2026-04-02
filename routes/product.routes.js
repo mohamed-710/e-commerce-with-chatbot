@@ -3,8 +3,8 @@ import { verifyToken } from "../middlewares/verifyToken.js";
 import { isAuthorized } from "../middlewares/allowedTo.js";
 import { validation } from "../middlewares/validation.js";
 import { uploadFileCloud } from "../middlewares/fileUpload.js";
-import { createProduct, updateProduct } from "../controllers/product.controller.js";
-import { createProductSchema, updateProductSchema } from "../validators/productSchema.js";
+import { createProduct, updateProduct, deleteProduct } from "../controllers/product.controller.js";
+import { createProductSchema, updateProductSchema, deleteProductSchema } from "../validators/productSchema.js";
 
 const router = express.Router();
 
@@ -168,6 +168,15 @@ router.patch(
     ]),
     validation(updateProductSchema),
     updateProduct,
+);
+
+
+router.delete(
+    "/:id",
+    verifyToken,
+    isAuthorized("seller"),
+    validation(deleteProductSchema),
+    deleteProduct,
 );
 
 export default router;
