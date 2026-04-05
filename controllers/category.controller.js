@@ -10,8 +10,10 @@ const createCategory = asyncWrapper(async (req, res, next) => {
     //check file
     const { name } = req.body;
     const existCategory = await Category.findOne({ name: name });
+
     if (existCategory)
         return next(appError.create("Category already exists", 400, httpStatusText.FAIL));
+    
     if (!req.file)
         return next(appError.create("Image file is required", 400, httpStatusText.FAIL));
 

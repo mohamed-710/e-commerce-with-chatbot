@@ -12,18 +12,14 @@ import Token from "../models/token.js";
 import Randomstring from "randomstring";
 
 const register = asyncWrapper(async (req, res, next) => {
+
     const { email, userName, password } = req.body;
 
     const existUser = await User.findOne({ email });
 
     if (existUser) return next(appError.create("User already exists", 400, httpStatusText.FAIL));
-    const hashPassword = await bcrypt.hash(
-        password,
-        parseInt(process.env.BCRYPT_ROUNDS));
 
     const activationToken = generateActivationToken(email);
-
-
 
     const confirmationlink = `http://localhost:3000/api/Auth/activate_account/${activationToken}`;
 
@@ -35,7 +31,7 @@ const register = asyncWrapper(async (req, res, next) => {
 
     if (!messageSent) return next(appError.create("someting want wrong", 400, httpStatusText.FAIL));
 
-    await User.create({ ...req.body, password: hashPassword });
+    await User.create({ ...req.body });
 
     return res.status(200).json({ success: true, message: "Check you email" })
 });
@@ -65,9 +61,9 @@ const login = asyncWrapper(async (req, res, next) => {
 
     if (!user.isConfirmed) return next(appError.create("you should activate your account!", 400, httpStatusText.FAIL));
 
-    const match = await bcrypt.compare(password, user.password);
+    const match = await user.comparePassword(password);
 
-    if (!match) return next("password dosent match", 400, httpStatusText.FAIL);
+    if (!match) return next(appError.create("password dosent match", 400, httpStatusText.FAIL));
 
     const token = generateJwtAndSetcookie(res, user);
 

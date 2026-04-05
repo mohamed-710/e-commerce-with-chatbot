@@ -61,7 +61,7 @@ const deleteSubCategory = asyncWrapper(async (req, res, next) => {
     await subcategory.deleteOne();
     //delete image from cloudinary
     await cloudinary.uploader.destroy(subcategory.image.publicId);
-    return res.json({ success: true, message: "category deleted successfully" });
+    return res.json({ success: true, message: "subcategory deleted successfully" });
 });
 const allSubCategories = asyncWrapper(async (req, res, next) => {
     //all subcategories of a certain category

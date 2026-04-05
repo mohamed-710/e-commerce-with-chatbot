@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Subcategory from "./SubCategory.js"
 const categorySchema=mongoose.Schema({
     name:{
         type:String,
@@ -37,5 +38,8 @@ categorySchema.virtual("subcategory",{
     localField:"_id",//category
     foreignField:"category",//subcategpry  
 });
+categorySchema.post("deleteOne",{document:true,query:true},async function(){
+    const subcategories=await Subcategory.deleteMany({category:this._id});
+ })
 const Category=mongoose.model("Category",categorySchema);
 export default Category;

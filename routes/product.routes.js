@@ -3,7 +3,7 @@ import { verifyToken } from "../middlewares/verifyToken.js";
 import { isAuthorized } from "../middlewares/allowedTo.js";
 import { validation } from "../middlewares/validation.js";
 import { uploadFileCloud } from "../middlewares/fileUpload.js";
-import { createProduct, updateProduct, deleteProduct } from "../controllers/product.controller.js";
+import { createProduct, updateProduct, deleteProduct ,getProduct} from "../controllers/product.controller.js";
 import { createProductSchema, updateProductSchema, deleteProductSchema } from "../validators/productSchema.js";
 
 const router = express.Router();
@@ -178,5 +178,9 @@ router.delete(
     validation(deleteProductSchema),
     deleteProduct,
 );
+router.get(
+    "/",
+    getProduct
+)
 
 export default router;

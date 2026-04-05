@@ -150,3 +150,28 @@ export const deleteProduct = asyncWrapper(async (req, res, next) => {
 
     return res.status(200).json({ success: true, message: "Product deleted successfully" });
 });
+
+export const getProduct=asyncWrapper(async(req,res,next)=>{
+    const {sort,page,keyword,category,subcategory,brand}=req.query;
+
+    if(category&& !(await Category.findById(category)))
+        return next(appError.create("Category not found",404,httpStatusText.FAIL));
+
+    if(subcategory&& !(await Subcategory.findById(subcategory)))
+        return next(appError.create("Subcategory not found",404,httpStatusText.FAIL));
+
+    if(brand&& !(await Brand.findById(brand)))
+        return next(appError.create("Brand not found",404,httpStatusText.FAIL));
+
+    const results=await Product.find({...req.query})
+    .sort(sort)
+    .paginate(page)
+    .search(keyword); 
+ console.log(results);
+ 
+    return res.status(200).json({
+        success:true,
+        message:"Product fetched successfully",
+        data:results,
+    });
+})

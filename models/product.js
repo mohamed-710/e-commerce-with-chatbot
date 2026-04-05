@@ -76,7 +76,7 @@ const productSchema = mongoose.Schema({
         }
     ]
 },
-    { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+    { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true }, strictQuery: true }
 );
 
 // Virtual field: finalPrice = price - (price * discount / 100)
@@ -91,5 +91,25 @@ productSchema.virtual("availableStock").get(function () {
     return this.stock - this.soldItems;
 });
 
+// query helper 
+productSchema.query.paginate = function (page) {
+    page = page < 1 || isNaN(page) || !page ? 1 : page;
+    const limit = 3;
+    const skip = (page - 1) * limit;
+    return this.skip(skip).limit(limit);
+}
+productSchema.query.search = function (keyword) {
+    if (keyword) {
+        return this.find({
+            $or: [
+                { name: { $regex: keyword, $options: "i" } },
+                { description: { $regex: keyword, $options: "i" } }
+            ]
+        })
+    }
+    return this;
+
+
+}
 const Product = mongoose.model("Product", productSchema);
 export default Product;

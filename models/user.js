@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 const userSchema = mongoose.Schema({
     userName: {
         type: String,
@@ -29,7 +30,7 @@ const userSchema = mongoose.Schema({
     phone: String,
     role: {
         type: String,
-        enum: ["user", "seller","admin"],
+        enum: ["user", "seller", "admin"],
         default: "user"
     },
     forgetcode: String,
@@ -49,6 +50,20 @@ const userSchema = mongoose.Schema({
     { timestamps: true }
 );
 
+//hooks 
+userSchema.pre("save", async function () {
+    if (this.isModified("password")) {
+        this.password = await bcrypt.hash(
+            this.password,
+            parseInt(process.env.BCRYPT_ROUNDS)
+        );
+    }
+});
+
+
+userSchema.methods.comparePassword=async function(comprepassword){
+    return await bcrypt.compare(comprepassword,this.password);
+};
 const User = mongoose.model("User", userSchema);
 
 export default User;
