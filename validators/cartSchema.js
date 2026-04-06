@@ -6,3 +6,10 @@ export const addToCartSchema = joi.object({
     quantity: joi.number().integer().min(1).required()
 });
 
+//make get cart schema 
+
+export const getCartSchema = joi.object({
+    cartId: joi.string().custom(isValidObjectId).optional()
+});
+// for admin when get cart cartid
+

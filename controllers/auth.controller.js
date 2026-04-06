@@ -10,6 +10,7 @@ import { generateActivationToken } from "../utils/genrateActivationToken.js";
 import { generateJwtAndSetcookie } from "../utils/generate_jwt_cookie.js";
 import Token from "../models/token.js";
 import Randomstring from "randomstring";
+import Cart from "../models/Cart.js";
 
 const register = asyncWrapper(async (req, res, next) => {
 
@@ -46,6 +47,7 @@ const activateAccount = asyncWrapper(async (req, res, next) => {
     if (!user) return next(appError.create("user notfound ", 404, httpStatusText.FAIL));
 
     //create a cart @TODO 
+    await Cart.create({ user: user._id });
 
     //send response
     return res.json({ success: true, message: "try to login" });

@@ -11,6 +11,8 @@ import brandRoutes from './routes/brand.routes.js';
 import cookieParser from 'cookie-parser';
 import couponRoutes from './routes/coupon.routes.js'
 import productRoutes from './routes/product.routes.js'
+import cartRoutes from './routes/cart.routes.js';
+
 dotenv.config();
 
 const app = express();
@@ -33,6 +35,8 @@ app.use('/api/brand', brandRoutes);
 app.use('/api/coupon',couponRoutes);
 
 app.use('/api/product',productRoutes);
+
+app.use('/api',cartRoutes);
 
 //@TODO MAKE middeleware for convert image to webap
 // 404 handler
