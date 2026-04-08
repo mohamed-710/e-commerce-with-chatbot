@@ -174,7 +174,7 @@ router.patch(
 router.delete(
     "/:id",
     verifyToken,
-    isAuthorized("seller"),
+    isAuthorized("admin","seller"),
     validation(deleteProductSchema),
     deleteProduct,
 );

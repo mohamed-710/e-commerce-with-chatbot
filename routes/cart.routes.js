@@ -1,6 +1,6 @@
 import express from "express";
-import { addTocart,getCart } from "../controllers/cart.controller.js";
-import { addToCartSchema } from "../validators/cartSchema.js";
+import { addTocart,getCart,updateCart  } from "../controllers/cart.controller.js";
+import { addToCartSchema ,getCartSchema,updateSchema} from "../validators/cartSchema.js";
 import { validation } from "../middlewares/validation.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { isAuthorized } from "../middlewares/allowedTo.js";
@@ -17,8 +17,15 @@ route.post("/add-cart",
 route.get("/get-cart",
     verifyToken,
     isAuthorized('user','admin'),
-    validation(addToCartSchema),
+    validation(getCartSchema),
     getCart
+    );
+
+route.patch("/update-cart",
+    verifyToken,
+    isAuthorized('user'),
+    validation(updateSchema),
+    updateCart
     );
 
 export default route;

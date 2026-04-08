@@ -36,7 +36,7 @@ app.use('/api/coupon',couponRoutes);
 
 app.use('/api/product',productRoutes);
 
-app.use('/api',cartRoutes);
+app.use('/api/cart',cartRoutes);
 
 //@TODO MAKE middeleware for convert image to webap
 // 404 handler
