@@ -3,7 +3,7 @@ import { isValidObjectId } from "../middlewares/validation.js";
 
 export const addToCartSchema = joi.object({
     productId: joi.string().custom(isValidObjectId).required(),
-    quantity: joi.number().integer().min(1).optional()
+    quantity: joi.number().integer().min(1).default(1)
 });
 
 //make get cart schema 
@@ -11,10 +11,13 @@ export const addToCartSchema = joi.object({
 export const getCartSchema = joi.object({
     cartId: joi.string().custom(isValidObjectId).optional()
 });
+
 // for admin when get cart cartid
-
-
 export const updateSchema=joi.object({
     productId:joi.string().custom(isValidObjectId).required(),
     quantity:joi.number().integer().min(1).optional()
-})
+});
+
+export const removeFromCartSchema = joi.object({
+    productId: joi.string().custom(isValidObjectId).required()
+});

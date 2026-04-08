@@ -5,10 +5,13 @@ import httpStatusText from '../utils/httpStatusText.js';
 import Product from "../models/product.js";
 export const addTocart = asyncWrapper(async (req, res, next) => {
     const {productId,quantity}=req.body;
+
     const product=await Product.findById(productId);
+
     if(!product) return next(appError.create("product not found", 404, httpStatusText.FAIL));
 
     if(product.availableStock<quantity) return next(appError.create("out of stock", 400, httpStatusText.FAIL));
+    //@TODO check if product already in cart and update quantity
     const cart = await Cart.findOneAndUpdate(
         {
             user: req.user._id,
@@ -23,8 +26,8 @@ export const addTocart = asyncWrapper(async (req, res, next) => {
                 }
             }
         },
-        { new: true }
-    );
+            { new: true }
+        );
     return res.json({
         success: true,
         results: cart
@@ -56,7 +59,7 @@ export const updateCart=(async(req,res,next)=>{
             user:req.user._id,
             "items.productId":productId        
         },
-        {"products.$.quantity":quantity},
+        {"items.$.quantity":quantity},
         {new:true}
     );
     return res.json({
@@ -64,3 +67,42 @@ export const updateCart=(async(req,res,next)=>{
         results:cart
     })
 })
+
+export const removeFromCart = asyncWrapper(async (req, res, next) => {
+    const { productId } = req.params;
+
+    // 1. Check product exists in DB
+    const product = await Product.findById(productId);
+    if (!product) return next(appError.create("Product not found", 404, httpStatusText.FAIL));
+
+
+    //@TODO 3. Check the product is actually in the cart
+
+
+    // 4. Pull the item from the cart
+    const updatedCart = await Cart.findOneAndUpdate(
+        { user: req.user._id },
+        { $pull: { items: { productId } } },
+        { new: true }
+    );
+
+    return res.json({
+        success: true,
+        message: "Product removed from cart",
+        results: updatedCart
+    });
+});
+
+export const clearCart = asyncWrapper(async (req, res, next) => {
+    const updatedCart = await Cart.findOneAndUpdate(
+        { user: req.user._id },
+        { $set: { items: [] } },
+        { new: true }
+    );
+
+    return res.json({
+        success: true,
+        message: "Cart cleared successfully",
+        results: updatedCart
+    });
+});
