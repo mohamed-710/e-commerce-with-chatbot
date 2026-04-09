@@ -10,7 +10,7 @@ export const addTocart = asyncWrapper(async (req, res, next) => {
 
     if(!product) return next(appError.create("product not found", 404, httpStatusText.FAIL));
 
-    if(product.availableStock<quantity) return next(appError.create("out of stock", 400, httpStatusText.FAIL));
+    if(product.inStock(quantity)) return next(appError.create("out of stock", 400, httpStatusText.FAIL));
     //@TODO check if product already in cart and update quantity
     const cart = await Cart.findOneAndUpdate(
         {
