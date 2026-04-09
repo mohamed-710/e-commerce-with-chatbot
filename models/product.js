@@ -108,8 +108,10 @@ productSchema.query.search = function (keyword) {
         })
     }
     return this;
+}
 
-
+productSchema.methods.inStock=function (requiredQuantity){
+   return this.availableStock>=requiredQuantity?true:false;
 }
 const Product = mongoose.model("Product", productSchema);
 export default Product;
