@@ -1,6 +1,5 @@
 export const signUpTemp = (link) => {
     const currentYear = new Date().getFullYear();
-    
     return `
     <!DOCTYPE html>
     <html lang="ar" dir="ltr">

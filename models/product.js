@@ -81,11 +81,9 @@ const productSchema = mongoose.Schema({
 
 // Virtual field: finalPrice = price - (price * discount / 100)
 productSchema.virtual("finalPrice").get(function () {
-    return Number.parseFloat(
-        this.price - (this.price * (this.discount || 0) / 100)
-    ).toFixed(2);
+    const priceAfterDiscount = this.price - (this.price * (this.discount || 0) / 100);
+    return Math.round(priceAfterDiscount * 100) / 100;
 });
-
 // Virtual field: available stock = stock - soldItems
 productSchema.virtual("availableStock").get(function () {
     return this.stock - this.soldItems;
@@ -110,8 +108,8 @@ productSchema.query.search = function (keyword) {
     return this;
 }
 
-productSchema.methods.inStock=function (requiredQuantity){
-   return this.availableStock>=requiredQuantity?true:false;
+productSchema.methods.inStock = function (requiredQuantity) {
+    return this.availableStock >= requiredQuantity ? true : false;
 }
 const Product = mongoose.model("Product", productSchema);
 export default Product;
