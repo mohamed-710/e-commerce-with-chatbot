@@ -167,7 +167,6 @@ export const getProduct=asyncWrapper(async(req,res,next)=>{
     .sort(sort)
     .paginate(page)
     .search(keyword); 
- console.log(results);
  
     return res.status(200).json({
         success:true,

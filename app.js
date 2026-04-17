@@ -94,6 +94,7 @@ app.use((err, req, res, next) => {
 // Start server
 const PORT = process.env.PORT || 3000;
 
+
 app.listen(PORT, async () => {
   await connectDB();
   console.log(`Server running on port ${PORT}`);

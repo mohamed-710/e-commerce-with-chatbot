@@ -9,8 +9,8 @@ function createInvoice(invoice, path) {
   generateInvoiceTable(doc, invoice);
   generateFooter(doc);
 
-  doc.end();
   doc.pipe(fs.createWriteStream(path));
+  doc.end();
 }
 
 function generateHeader(doc) {
@@ -57,10 +57,10 @@ function generateCustomerInformation(doc, invoice) {
     .text(invoice.shipping.address, 300, customerInformationTop + 15)
     .text(
       invoice.shipping.city +
-        ", " +
-        invoice.shipping.state +
-        ", " +
-        invoice.shipping.country,
+      ", " +
+      invoice.shipping.state +
+      ", " +
+      invoice.shipping.country,
       300,
       customerInformationTop + 30
     )
@@ -188,4 +188,4 @@ function formatDate(date) {
   return year + "/" + month + "/" + day;
 }
 
-export default  createInvoice;
+export default createInvoice;

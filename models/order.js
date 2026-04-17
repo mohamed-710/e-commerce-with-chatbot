@@ -13,9 +13,27 @@ const orderSchema = new mongoose.Schema({
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Product"
             },
-            name: String,        // snapshot
-            itemPrice: Number,       // snapshot
-            quantity: {type: Number, min: 1 },
+            name: String,
+            quantity: { type: Number, min: 1 },
+            unitPrice: {
+                type: Number,
+                required: true
+            },
+
+            productDiscount: {
+                type: Number,
+                default: 0
+            },
+
+            finalUnitPrice: {
+                type: Number,
+                required: true
+            },
+
+            lineTotal: {
+                type: Number,
+                required: true
+            }
         }
     ],
     coupon: {
@@ -24,7 +42,11 @@ const orderSchema = new mongoose.Schema({
             ref: "Coupon"
         },
         name: String,
-        discount: { type: Number, min: 1, max: 100 }
+        discount: {
+            type: Number,
+            min: 0,
+            max: 100
+        }
     },
 
     phone: { type: String, required: true },
@@ -63,9 +85,8 @@ const orderSchema = new mongoose.Schema({
     paidAt: Date,
     deliveredAt: Date,
     subtotal: Number,
-    shippingPrice: Number,
     totalPrice: Number,
-
-}, { timestamps: true });
+    shippingPrice: Number,
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
 export default mongoose.model("Order", orderSchema);

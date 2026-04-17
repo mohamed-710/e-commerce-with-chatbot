@@ -3,43 +3,22 @@ import appError from "../utils/appError.js";
 import httpStatusText from "../utils/httpStatusText.js";
 import Order from "../models/order.js";
 import Cart from "../models/Cart.js";
-import Product from "../models/product.js";
 import Coupon from "../models/coupon.js";
-import User from "../models/user.js";
 import cloudinary from "../config/cloud.js";
+import { updateStock, clearCart } from "../services/order.services.js";
 import createInvoice from "../utils/pdfInvoice.js";
 import { sendEmail } from "../utils/sendEmails.js";
 import fs from "fs";
 import path from "path";
 
-const buildInvoicePayload = (order, user) => ({
-    invoice_nr: order._id.toString().slice(-6).toUpperCase(),
-    shipping: {
-        name: user.userName,
-        address: order.address,
-        city: "",
-        state: "",
-        country: "",
-    },
-    items: order.items.map((item) => ({
-        item: item.name,
-        description: item.name,
-        quantity: item.quantity,
-        amount: item.itemPrice * item.quantity * 100, // pdfInvoice uses cents
-    })),
-    subtotal: order.subtotal * 100,
-    paid: order.isPaid ? order.totalPrice * 100 : 0,
-});
-
 
 export const createOrder = asyncWrapper(async (req, res, next) => {
     const { phone, address, paymentMethod, coupon: couponCode } = req.body;
 
-    let checkCoupon;
-    if(couponCode){
-        checkCoupon=await Coupon.findOne({name:couponCode});
-        console.log("Coupon found:", checkCoupon);
-        if(!checkCoupon){
+    let couponDoc;
+    if (couponCode) {
+        couponDoc = await Coupon.findOne({ name: couponCode, expiredAt: { $gt: new Date() } });
+        if (!couponDoc) {
             return next(appError.create("Invalid or expired coupon", 400, httpStatusText.FAIL));
         }
     }
@@ -48,12 +27,12 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
         "items.productId",
         "name price discount stock soldItems"
     );
-   
+
     if (!cart || cart.items.length === 0)
         return next(appError.create("Your cart is empty", 400, httpStatusText.FAIL));
 
-    // 2. Validate stock & build order items (snapshot)
     const orderItems = [];
+    let subtotal = 0;
     for (const cartItem of cart.items) {
         const product = cartItem.productId;
         if (!product)
@@ -68,142 +47,106 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
                 )
             );
 
+        const unitPrice = product.price;
+        const productDiscount = product.discount || 0;
+        const finalUnitPrice = unitPrice - (unitPrice * productDiscount / 100);
+        const lineTotal = finalUnitPrice * cartItem.quantity;
         orderItems.push({
             productId: product._id,
             name: product.name,
-            itemPrice: product.finalPrice,
+            unitPrice,
+            productDiscount,
+            finalUnitPrice,
             quantity: cartItem.quantity,
+            lineTotal
+
         });
+        subtotal += lineTotal;
     }
-    
-    // const subtotal = orderItems.reduce(
-    //     (sum, item) => sum + item.itemPrice * item.quantity,
-    //     0
-    // );
 
-    // // 4. Coupon (optional)
-    // let couponDoc = null;
-    // let discountAmount = 0;
-    // if (couponCode) {
-    //     couponDoc = await Coupon.findOne({
-    //         name: couponCode,
-    //         expiredAt: { $gt: new Date() },
-    //     });
-    //     if (!couponDoc)
-    //         return next(appError.create("Invalid or expired coupon", 400, httpStatusText.FAIL));
-    //     discountAmount = subtotal * (couponDoc.discount / 100);
-    // }
 
-    // // 5. Totals
+    let discountAmount = 0;
+    if (couponDoc) {
+        discountAmount = subtotal * (couponDoc.discount / 100);
+    }
+
     // const SHIPPING_PRICE = 0; // free shipping — adjust as needed
     // const totalPrice = Math.max(0, subtotal - discountAmount) + SHIPPING_PRICE;
+    const totalPrice = subtotal - discountAmount;
+    const orderData = {
+        user: req.user._id,
+        items: orderItems,
+        phone,
+        address,
+        paymentMethod,
+        subtotal,
+        totalPrice,
+        coupon: couponDoc
+            ? {
+                id: couponDoc._id,
+                name: couponDoc.name,
+                discount: couponDoc.discount
+            }
+            : {}
 
-    // // 6. Create the Order document
-    // const orderData = {
-    //     user: req.user._id,
-    //     items: orderItems,
-    //     phone,
-    //     address,
-    //     paymentMethod,
-    //     subtotal: parseFloat(subtotal.toFixed(2)),
-    //     shippingPrice: SHIPPING_PRICE,
-    //     totalPrice: parseFloat(totalPrice.toFixed(2)),
-    // };
+    };
+    const order = await Order.create(orderData);
+    const user = req.user;
+    const invoice = {
+        shipping: {
+            name: user.userName,
+            address: order.address,
+            country: "Egypt",
+        },
+        items: order.items,
+        subtotal: order.subtotal,
+        totalPrice: order.totalPrice,
+        invoice_nr: order._id
+    };
 
-    // if (couponDoc) {
-    //     orderData.coupon = {
-    //         id: couponDoc._id,
-    //         name: couponDoc.name,
-    //         discount: couponDoc.discount,
-    //     };
-    // }
+    const pdfPath = path.join(process.cwd(), "tempInvoices", `${order._id}.pdf`);;
 
-    // const order = await Order.create(orderData);
+    if (!fs.existsSync(pdfPath)) {
+        fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
+    }
 
-    // // 7. Generate PDF invoice to a temp file
-    // const invoicePath = path.join("invoices", `${order._id}.pdf`);
-    // // Ensure directory exists
-    // if (!fs.existsSync("invoices")) fs.mkdirSync("invoices");
+    createInvoice(invoice, pdfPath);
 
-    // const user = await User.findById(req.user._id).select("userName email");
-    // createInvoice(buildInvoicePayload(order, user), invoicePath);
+    const { secure_url, public_id } = await cloudinary.uploader.upload(pdfPath, {
+        folder: `${process.env.CLOUD_FOLDER_NAME}/orders/${order._id}`,
+    });
 
-    // // Small delay to allow PDFKit to flush (doc.end() is sync-ish)
-    // await new Promise((resolve) => setTimeout(resolve, 500));
+    order.invoice = { secure_url, public_id };
 
-    // // 8. Upload invoice PDF to Cloudinary
-    // let invoiceData = {};
-    // try {
-    //     const uploadResult = await cloudinary.uploader.upload(invoicePath, {
-    //         folder: `${process.env.CLOUD_FOLDER_NAME}/invoices`,
-    //         resource_type: "raw",
-    //         public_id: `invoice_${order._id}`,
-    //     });
-    //     invoiceData = {
-    //         public_id: uploadResult.public_id,
-    //         secure_url: uploadResult.secure_url,
-    //     };
-    //     // Clean up local temp file
-    //     fs.unlinkSync(invoicePath);
-    // } catch (uploadErr) {
-    //     // Non-blocking — order is already created, just skip invoice upload
-    //     console.error("Invoice upload failed:", uploadErr.message);
-    // }
+    await order.save();
 
-    // // 9. Save invoice URL in Order
-    // if (invoiceData.secure_url) {
-    //     order.invoice = invoiceData;
-    //     await order.save();
-    // }
+    const isSent = await sendEmail({
+        to: user.email,
+        subject: "Your Order Confirmation 🛍️",
+        attachments: [{
+            path: secure_url,
+            filename: `invoice-${order._id}.pdf`,
+            contentType: "application/pdf",
+        }],
+    });
 
-    // // 10. Send invoice email to user
-    // try {
-    //     await sendEmail({
-    //         to: user.email,
-    //         subject: "Your Order Confirmation 🛍️",
-    //         html: `
-    //             <h2>Thank you for your order, ${user.userName}!</h2>
-    //             <p>Your order <strong>#${order._id}</strong> has been placed successfully.</p>
-    //             <p><strong>Total:</strong> $${order.totalPrice.toFixed(2)}</p>
-    //             <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
-    //             <p><strong>Shipping Address:</strong> ${order.address}</p>
-    //             ${invoiceData.secure_url
-    //                 ? `<p><a href="${invoiceData.secure_url}">📄 Download Your Invoice</a></p>`
-    //                 : ""
-    //             }
-    //             <hr/>
-    //             <small>If you did not place this order, please contact our support team immediately.</small>
-    //         `,
-    //     });
-    // } catch (emailErr) {
-    //     console.error("Invoice email failed:", emailErr.message);
-    // }
 
-    // // 11. Update product stock
-    // const stockUpdates = orderItems.map((item) =>
-    //     Product.findByIdAndUpdate(item.productId, {
-    //         $inc: { soldItems: item.quantity },
-    //     })
-    // );
-    // await Promise.all(stockUpdates);
+    if (!isSent) {
+        return next(appError.create("Failed to send order confirmation email", 400, httpStatusText.FAIL));
+    };
+    fs.unlinkSync(pdfPath);
 
-    // // 12. Clear the cart
-    // await Cart.findOneAndUpdate(
-    //     { user: req.user._id },
-    //     { $set: { items: [] } }
-    // );
+    updateStock(order.items);
 
-    // return res.status(201).json({
-    //     success: true,
-    //     message: "Order placed successfully",
-    //     results: {
-    //         orderId: order._id,
-    //         totalPrice: order.totalPrice,
-    //         orderStatus: order.orderStatus,
-    //         invoice: order.invoice,
-    //     },
-    // });
+    clearCart(user._id);
+
+    return res.status(201).json({
+        success: true,
+        message: "Order placed successfully",
+        results: { order }
+    });
 });
+
 
 // // ─── Get All Orders (Admin only) ─────────────────────────────────────────────
 
