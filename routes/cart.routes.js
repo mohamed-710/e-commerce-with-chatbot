@@ -38,7 +38,7 @@ route.patch("/remove-cart/:productId",
 route.patch("/clear-cart",
     verifyToken,
     isAuthorized('user'),
-    clearCart
+    clearCart 
     );
 
 export default route;

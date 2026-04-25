@@ -88,5 +88,6 @@ const orderSchema = new mongoose.Schema({
     totalPrice: Number,
     shippingPrice: Number,
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
+const Order=mongoose.model("Order",orderSchema);
 
-export default mongoose.model("Order", orderSchema);
+export default Order;

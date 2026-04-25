@@ -1,12 +1,14 @@
 import { Router } from "express";
 import {
     createOrder,
+    cancelOrder
 } from "../controllers/order.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { isAuthorized } from "../middlewares/allowedTo.js";
 import { validation } from "../middlewares/validation.js";
 import {
     createOrderSchema,
+    orderIdParamSchema
 } from "../validators/orderSchema.js";
 
 const router = Router();
@@ -18,7 +20,13 @@ router.post(
     validation(createOrderSchema),
     createOrder
 );
-
+router.patch(
+    "/cancel/:orderId",
+    verifyToken,
+    isAuthorized("user"),
+    validation(orderIdParamSchema),
+    cancelOrder
+);
 // // GET /api/order/my-orders  — authenticated user only
 // router.get(
 //     "/my-orders",
@@ -54,12 +62,6 @@ router.post(
 // );
 
 // // PATCH /api/order/:orderId/cancel  — user (own) or admin
-// router.patch(
-//     "/:orderId/cancel",
-//     verifyToken,
-//     isAuthorized(["user", "admin"]),
-//     validation(orderIdParamSchema),
-//     cancelOrder
-// );
+
 
 export default router;

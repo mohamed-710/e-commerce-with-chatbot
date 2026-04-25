@@ -51,6 +51,7 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
         const productDiscount = product.discount || 0;
         const finalUnitPrice = unitPrice - (unitPrice * productDiscount / 100);
         const lineTotal = finalUnitPrice * cartItem.quantity;
+
         orderItems.push({
             productId: product._id,
             name: product.name,
@@ -136,7 +137,7 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
     };
     fs.unlinkSync(pdfPath);
 
-    updateStock(order.items);
+    updateStock(order.items,true);
 
     clearCart(user._id);
 
@@ -146,7 +147,37 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
         results: { order }
     });
 });
+export const cancelOrder = asyncWrapper(async (req, res, next) => {
+    const {orderId} = req.params;
+    const order = await Order.findById(orderId);
+    if(!order){
+        return next(appError.create("Order not found", 404, httpStatusText.FAIL));
+    }
 
+    
+    if(order.user._id.toString() !== req.user._id.toString()){
+        return next(appError.create("You are not authorized to cancel this order", 403, httpStatusText.FAIL));
+    }
+    if(order.orderStatus ==="delivered" ||
+         order.orderStatus ==="shipped"|| 
+         order.orderStatus ==="cancelled"){
+        return next(appError.create("Order cannot be cancelled", 400, httpStatusText.FAIL));
+    }
+    order.orderStatus = "cancelled";
+    await order.save();
+    updateStock(order.items,false);
+    return res.json({
+        success: true,
+        message: "Order cancelled successfully",
+        results: {  
+            orderId: order._id,
+            status: order.orderStatus,
+            totalPrice: order.totalPrice,
+            cancelledAt: order.updatedAt,
+        }
+    });
+        
+})
 
 // // ─── Get All Orders (Admin only) ─────────────────────────────────────────────
 
@@ -227,46 +258,3 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
 //     });
 // });
 
-// // ─── Cancel Order (User/Admin) ───────────────────────────────────────────────
-
-// export const cancelOrder = asyncWrapper(async (req, res, next) => {
-//     const { orderId } = req.params;
-
-//     const order = await Order.findById(orderId);
-//     if (!order)
-//         return next(appError.create("Order not found", 404, httpStatusText.FAIL));
-
-//     // Only the owner or an admin can cancel
-//     if (
-//         req.user.role === "user" &&
-//         order.user.toString() !== req.user._id.toString()
-//     )
-//         return next(appError.create("Access denied", 403, httpStatusText.FAIL));
-
-//     // Only cancellable if still placed or shipped
-//     if (!["placed", "shipped"].includes(order.orderStatus))
-//         return next(
-//             appError.create(
-//                 `Cannot cancel an order with status "${order.orderStatus}"`,
-//                 400,
-//                 httpStatusText.FAIL
-//             )
-//         );
-
-//     order.orderStatus = "cancelled";
-//     await order.save();
-
-//     // Restore product stock
-//     const stockRestores = order.items.map((item) =>
-//         Product.findByIdAndUpdate(item.productId, {
-//             $inc: { soldItems: -item.quantity },
-//         })
-//     );
-//     await Promise.all(stockRestores);
-
-//     return res.json({
-//         success: true,
-//         message: "Order cancelled successfully",
-//         results: order,
-//     });
-// });

@@ -40,11 +40,10 @@ export const createOrderSchema = joi
 //     .or("orderStatus", "paymentStatus") // at least one must be provided
 //     .required();
 
-// // ─── Cancel / Get single order (by orderId param) ───────────────────────────
-// export const orderIdParamSchema = joi
-//     .object({
-//         orderId: joi.string().custom(isValidObjectId).required().messages({
-//             "any.required": "Order ID is required",
-//         }),
-//     })
-//     .required();
+export const orderIdParamSchema = joi
+    .object({
+        orderId: joi.string().custom(isValidObjectId).required().messages({
+            "any.required": "Order ID is required",
+        }),
+    })
+    .required();

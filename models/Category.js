@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Subcategory from "./SubCategory.js"
-const categorySchema=mongoose.Schema({
+const categorySchema=new mongoose.Schema({
     name:{
         type:String,
         required:true,
