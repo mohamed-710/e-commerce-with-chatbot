@@ -33,6 +33,9 @@ const orderSchema = new mongoose.Schema({
             lineTotal: {
                 type: Number,
                 required: true
+            },
+            thumbnail: {
+                secure_url: { type: String, required: true }
             }
         }
     ],
@@ -88,6 +91,6 @@ const orderSchema = new mongoose.Schema({
     totalPrice: Number,
     shippingPrice: Number,
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
-const Order=mongoose.model("Order",orderSchema);
+const Order = mongoose.model("Order", orderSchema);
 
 export default Order;

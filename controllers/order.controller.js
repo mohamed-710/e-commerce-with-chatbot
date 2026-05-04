@@ -10,10 +10,11 @@ import createInvoice from "../utils/pdfInvoice.js";
 import { sendEmail } from "../utils/sendEmails.js";
 import fs from "fs";
 import path from "path";
-
+import Stripe from 'stripe';
 
 export const createOrder = asyncWrapper(async (req, res, next) => {
     const { phone, address, paymentMethod, coupon: couponCode } = req.body;
+    console.log("thumbnail");
 
     let couponDoc;
     if (couponCode) {
@@ -25,8 +26,10 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
 
     const cart = await Cart.findOne({ user: req.user._id }).populate(
         "items.productId",
-        "name price discount stock soldItems"
+        "name price discount stock soldItems thumbnail"
     );
+
+
 
     if (!cart || cart.items.length === 0)
         return next(appError.create("Your cart is empty", 400, httpStatusText.FAIL));
@@ -59,12 +62,14 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
             productDiscount,
             finalUnitPrice,
             quantity: cartItem.quantity,
-            lineTotal
+            lineTotal,
+            thumbnail: {
+                secure_url: product.thumbnail.secure_url,
+            }
 
         });
         subtotal += lineTotal;
     }
-
 
     let discountAmount = 0;
     if (couponDoc) {
@@ -137,9 +142,47 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
     };
     fs.unlinkSync(pdfPath);
 
-    updateStock(order.items,true);
+    updateStock(order.items, true);
 
     clearCart(user._id);
+
+    if (paymentMethod === "card") {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+        let couponExisted;
+        if (order.coupon.name !== undefined) {
+            couponExisted = await stripe.coupons.create({
+                percent_off: order.coupon.discount,
+                duration: "once"
+            })
+        }
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ["card"],
+            mode: "payment",
+            success_url: process.env.CLIENT_URL,
+            cancel_url: process.env.CLIENT_URL,
+            line_items: order.items.map((item) => ({
+                price_data: {
+                    currency: "egp",
+                    product_data: {
+                        name: item.name,
+                        images: [item.thumbnail.secure_url],
+                    },
+                    unit_amount: Math.round(item.finalUnitPrice * 100),
+                },
+                quantity: item.quantity,
+            })
+            ),
+            discounts: couponExisted ? [{ coupon: couponExisted.id }] : []
+        });
+        return res.json({
+            success: true,
+            message: "Order placed successfully",
+            results: {
+                url: session.url
+            }
+        })
+    }
 
     return res.status(201).json({
         success: true,
@@ -147,36 +190,45 @@ export const createOrder = asyncWrapper(async (req, res, next) => {
         results: { order }
     });
 });
+
+
+
+
+
+
+
+
+
 export const cancelOrder = asyncWrapper(async (req, res, next) => {
-    const {orderId} = req.params;
+    const { orderId } = req.params;
     const order = await Order.findById(orderId);
-    if(!order){
+    if (!order) {
         return next(appError.create("Order not found", 404, httpStatusText.FAIL));
     }
 
-    
-    if(order.user._id.toString() !== req.user._id.toString()){
+
+    if (order.user._id.toString() !== req.user._id.toString()) {
         return next(appError.create("You are not authorized to cancel this order", 403, httpStatusText.FAIL));
     }
-    if(order.orderStatus ==="delivered" ||
-         order.orderStatus ==="shipped"|| 
-         order.orderStatus ==="cancelled"){
+    if (order.orderStatus === "delivered" ||
+        order.orderStatus === "shipped" ||
+        order.orderStatus === "cancelled") {
         return next(appError.create("Order cannot be cancelled", 400, httpStatusText.FAIL));
     }
     order.orderStatus = "cancelled";
     await order.save();
-    updateStock(order.items,false);
+    updateStock(order.items, false);
     return res.json({
         success: true,
         message: "Order cancelled successfully",
-        results: {  
+        results: {
             orderId: order._id,
             status: order.orderStatus,
             totalPrice: order.totalPrice,
             cancelledAt: order.updatedAt,
         }
     });
-        
+
 })
 
 // // ─── Get All Orders (Admin only) ─────────────────────────────────────────────

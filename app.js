@@ -16,10 +16,12 @@ import reviewRoutes from './routes/review.route.js';
 import httpLogger from './middlewares/httpLogger.js';
 import slowLogger from './middlewares/slowLogger.js';
 import errorLogger from './middlewares/errorLogger.js';
+import { corsMiddleware } from './config/corsConfig.js'
 dotenv.config();
 
 const app = express();
 
+app.use(corsMiddleware);
 
 app.use(express.json());
 
@@ -41,15 +43,15 @@ app.use('/api/subCategory', subCategoryRoutes);
 
 app.use('/api/brand', brandRoutes);
 
-app.use('/api/coupon',couponRoutes);
+app.use('/api/coupon', couponRoutes);
 
-app.use('/api/product',productRoutes);
+app.use('/api/product', productRoutes);
 
-app.use('/api/cart',cartRoutes);
+app.use('/api/cart', cartRoutes);
 
-app.use('/api/order',orderRoutes);
+app.use('/api/order', orderRoutes);
 
-app.use('/api/review',reviewRoutes);
+app.use('/api/review', reviewRoutes);
 
 //@TODO MAKE middeleware for convert image to webap
 
@@ -65,15 +67,13 @@ app.use('/api/review',reviewRoutes);
 app.use(errorLogger);
 
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || err.cause || 500;
+  const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
     error: 'Something went wrong!',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 });
-
-
 
 const PORT = process.env.PORT || 3000;
 
